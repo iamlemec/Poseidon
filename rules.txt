@@ -1,0 +1,2 @@
+amoeba: rfact = 0.400000, tfact = 0.080744, speed = 0.001099
+fizz: rfact = 0.829440, tfact = 0.076826, speed = 17.279997
