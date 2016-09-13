@@ -1,2 +1,4 @@
 amoeba: rfact = 0.400000, tfact = 0.080744, speed = 0.001099
 fizz: rfact = 0.829440, tfact = 0.076826, speed = 17.279997
+nova: rfact = 12.779192, tfact = 0.049587, speed = 10.000000
+fizzler: rfact = 1.000000, tfact = 88.907623, speed = 14.399998
