@@ -84,7 +84,8 @@ void renderImage()
     bool advance = (frame || running);
 
     cudaMemcpy(d_screen_old, d_screen, imageW * imageH * sizeof(uchar4), cudaMemcpyDeviceToDevice);
-    Poseidon_kernel(d_screen, d_screen_old, d_field, imageW, imageH, advance, pulse, px, py, fx, fy, rfact, tfact, width,   steep, fieldType, draw_field, calc_field);
+    Poseidon_kernel(d_screen, d_screen_old, d_field, imageW, imageH, advance, pulse,
+        px, py, fx, fy, rfact, tfact, width, steep, fieldType, draw_field, calc_field);
     cudaThreadSynchronize();
 
     cudaGraphicsUnmapResources(1, &cuda_pbo_resource, 0);
@@ -201,7 +202,7 @@ void keyboardFunc(unsigned char k, int, int)
         steep /= 1.2;
         break;
     case 't':
-        fieldType = !fieldType;
+        fieldType = (fieldType + 1) % 3;
         calc_field = true;
         break;
     case 'y':
@@ -390,6 +391,8 @@ void genRandImage()
 
 void reshapeFunc(int w, int h)
 {
+    printf("size = %i x %i\n", w, h);
+
     glViewport(0, 0, w, h);
 
     glMatrixMode(GL_MODELVIEW);
@@ -460,6 +463,12 @@ int main(int argc, char **argv)
     if (argc - 1 >= 4) {
         steep = atof(argv[4]);
     }
+
+    printf("size = %i x %i\n", imageW, imageH);
+    printf("tfact = %f\n", tfact);
+    printf("rfact = %f\n", rfact);
+    printf("width = %f\n", width);
+    printf("steep = %f\n", steep);
 
     // Initialize OpenGL context first before the CUDA context is created.  This is needed
     // to achieve optimal performance with OpenGL/CUDA interop.
