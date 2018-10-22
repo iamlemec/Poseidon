@@ -12,31 +12,24 @@
 
 #include "Poseidon_kernel.h"
 
-// Random number macros
-#define RANDOMSEED(seed) ((seed) = ((seed) * 1103515245 + 12345))
-#define RANDOMBITS(seed, bits) ((unsigned int)RANDOMSEED(seed) >> (32 - (bits)))
-
-//OpenGL PBO and texture "names"
+// openGL PBO and texture "names"
 GLuint gl_PBO, gl_Tex, gl_Shader;
 struct cudaGraphicsResource *cuda_pbo_resource; // handles OpenGL-CUDA exchange
 
-// Source image on the host side
+// source image on the host side
 uchar4 *h_screen = 0;
 
-// Destination image on the GPU side
+// destination image on the GPU side
 uchar4 *d_screen = NULL;
 uchar4 *d_screen_old = NULL;
 uchar4 *d_cells = NULL;
 float4 *d_field = NULL;
 
-// Original image width and height
-int imageW = 400, imageH = 400;
+// original image width and height
+int imageW = 800;
+int imageH = 800;
 
-// Starting color multipliers and random seed
-int colorSeed = 0;
-uchar4 colors;
-
-// User interface variables
+// user interface variables
 bool leftClicked = false;
 bool middleClicked = false;
 bool rightClicked = false;
@@ -47,28 +40,42 @@ bool pulse = false;
 bool calc_field = true;
 bool draw_field = false;
 bool regen = true;
+
+// pulse and field positions
 int px = 0;
 int py = 0;
 int fx = 0;
 int fy = 0;
 
-// Timer ID
+// timer ID
 float speed = 10.0;
 
-//float rfact = 0.4;
-//float tfact = 0.19;
-float rfact = 1.0;
+// default parameters
 float tfact = 0.92;
+float rfact = 1.0;
 float width = 0.5;
 float steep = 3.0;
-
 int fieldType = 0;
 
-#define MAX_EPSILON 50
+/*
+// karam's favorite
+float rfact = 0.833333;
+float tfact = 3.560367;
+float width = 9.244208;
+float steep = 0.135220;
+int fieldType = 1;
+*/
 
-#define MAX(a,b) ((a > b) ? a : b)
-
+// unknown
+#define CHAR_MASK 0x000000ff
 #define BUFFER_DATA(i) ((char *)0 + i)
+#define INT_TO_UCHAR4(r) (*((uchar4*)(&r)))
+#define INT_TO_UCHAR(r) ((unsigned char)(r & CHAR_MASK))
+
+// image types
+#define IMAGE_TYPE_CUTOFF 0
+#define IMAGE_TYPE_GAUSSIAN 1
+#define IMAGE_TYPE_UNIFORM 2
 
 void renderImage()
 {
@@ -153,6 +160,70 @@ void cleanup()
 
 void initMenus();
 
+inline float distance2(float x1, float y1, float x2, float y2)
+{
+    return sqrt(powf(x1-x2,2)+powf(y1-y2,2));
+}
+
+inline float gaussian(float x, float y, float cx, float cy, float sigma)
+{
+    float gx = exp(-0.5*powf((x-cx)/sigma,2));
+    float gy = exp(-0.5*powf((y-cy)/sigma,2));
+    return 0.2*gx*gy;
+}
+
+void genRandImage(int type, bool indep)
+{
+    int ix, iy, pos;
+    float fx, fy;
+    int r0;
+    float v;
+    unsigned char c;
+    uchar4 r;
+
+    for (iy = 0; iy < imageH; iy++) {
+        for (ix = 0; ix < imageW; ix++) {
+            pos = iy*imageW + ix;
+            fx = float(ix)/imageW;
+            fy = float(iy)/imageH;
+            switch (type) {
+            case IMAGE_TYPE_CUTOFF:
+                if (distance2(fx,fy,0.5,0.5) < 0.1) {
+                    r0 = rand();
+                    r = INT_TO_UCHAR4(r0);
+                    r.w = 0;
+                    if (!indep) {
+                        r.y = r.x;
+                        r.z = r.x;
+                    }
+                } else {
+                    r = {0, 0, 0, 0};
+                }            
+                break;
+            case IMAGE_TYPE_GAUSSIAN:
+                v = rand()*gaussian(fx,fy,0.5,0.5,0.1);
+                r0 = (int)(CHAR_MASK*v);
+                c = INT_TO_UCHAR(r0);
+                r = {c, c, c, 0};
+                break;
+            case IMAGE_TYPE_UNIFORM:
+                r.w = 0;
+                v = powf(rand(), 0.25);
+                r0 = (int)(CHAR_MASK*v);
+                r.x = r0;
+                v = powf(rand(), 0.25);
+                r0 = (int)(CHAR_MASK*v);
+                r.y = r0;
+                v = powf(rand(), 0.25);
+                r0 = (int)(CHAR_MASK*v);
+                r.z = r0;
+                break;
+            }
+            h_screen[pos] = r;
+        }
+    }
+}
+
 // OpenGL keyboard function
 void keyboardFunc(unsigned char k, int, int)
 {
@@ -164,11 +235,11 @@ void keyboardFunc(unsigned char k, int, int)
         exit(EXIT_SUCCESS);
         break;
     case ' ':
-        printf("Space.\n");
+        printf("Pause\n");
         running = !running;
         break;
     case 'f':
-        printf("Frame.\n");
+        printf("Advance frame\n");
         if (!running) frame = true;
         break;
     case 'q':
@@ -208,11 +279,18 @@ void keyboardFunc(unsigned char k, int, int)
     case 'y':
         draw_field = true;
         running = false;
+        break;
+    case 'r':
+        printf("Random image\n");
+        regen = true;
+        calc_field = true;
+        genRandImage(IMAGE_TYPE_UNIFORM, false);
+        break;
     default:
         break;
     }
 
-    printf("rfact = %f, tfact = %f, width = %f, steep = %f, field = %i, speed = %f\n",rfact,tfact,width,steep,fieldType,speed);
+    printf("\n[rule]\nself_couple = %f\nfield_couple = %f\nfield_type = %i\nrule_width = %f\nrule_steep = %f\ngrid_size='%ix%i'\nspeed = %f\n\n",tfact,rfact,fieldType,width,steep,imageW,imageH,1.0/speed);
 }
 
 // OpenGL mouse click function
@@ -370,25 +448,6 @@ void initOpenGLBuffers(int w, int h)
     gl_Shader = compileASMShader(GL_FRAGMENT_PROGRAM_ARB, shader_code);
 }
 
-void genRandImage()
-{
-    int ix, iy, pos;
-    int* isrc = (int*)h_screen;
-    int r;
-    for (iy = 0; iy < imageH; iy++) {
-        for (ix = 0; ix < imageW; ix++) {
-            pos = iy*imageW + ix;
-            if (sqrt(powf(float(ix)/imageW-0.5,2)+powf(float(iy)/imageH-0.5,2)) < 0.1) {
-                r = rand();
-            } else {
-                r = 0;
-            }
-            isrc[pos] = r;
-            h_screen[pos].w = 0;
-        }
-    }
-}
-
 void reshapeFunc(int w, int h)
 {
     printf("size = %i x %i\n", w, h);
@@ -412,7 +471,7 @@ void reshapeFunc(int w, int h)
     regen = true;
     calc_field = true;
 
-    genRandImage();
+    genRandImage(IMAGE_TYPE_GAUSSIAN, true);
 }
 
 void initGL(int argc, char **argv)
@@ -438,11 +497,6 @@ void initGL(int argc, char **argv)
 
 void initData(int argc, char **argv)
 {
-    colors.w = 0;
-    colors.x = 3;
-    colors.y = 5;
-    colors.z = 7;
-    printf("Data initialization done.\n");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -451,17 +505,30 @@ void initData(int argc, char **argv)
 int main(int argc, char **argv)
 {
     // parse command line arguments
-    if (argc - 1 >= 1) {
+    int narg = argc - 1;
+    if (narg >= 1) {
         tfact = atof(argv[1]);
     }
-    if (argc - 1 >= 2) {
+    if (narg >= 2) {
         rfact = atof(argv[2]);
     }
-    if (argc - 1 >= 3) {
+    if (narg >= 3) {
         width = atof(argv[3]);
     }
-    if (argc - 1 >= 4) {
+    if (narg >= 4) {
         steep = atof(argv[4]);
+    }
+    if (narg >= 5) {
+        fieldType = atoi(argv[5]);
+    }
+    if (narg >= 6) {
+        imageW = atoi(argv[6]);
+    }
+    if (narg >= 7) {
+        imageH = atoi(argv[7]);
+    }
+    if (narg >= 8) {
+        speed = atof(argv[8]);
     }
 
     printf("size = %i x %i\n", imageW, imageH);
@@ -469,6 +536,8 @@ int main(int argc, char **argv)
     printf("rfact = %f\n", rfact);
     printf("width = %f\n", width);
     printf("steep = %f\n", steep);
+    printf("field = %i\n", fieldType);
+    printf("speed = %f\n", speed);
 
     // Initialize OpenGL context first before the CUDA context is created.  This is needed
     // to achieve optimal performance with OpenGL/CUDA interop.

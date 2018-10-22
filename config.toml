@@ -1,0 +1,52 @@
+[default]
+self_couple = 0.92
+field_couple = 1.0
+field_type = 'null'
+rule_width = 0.5
+rule_steep = 3.0
+grid_size = '400x400'
+speed = 1.0
+
+[karam]
+self_couple = 3.560367
+field_couple = 0.833333
+field_type = 'null'
+rule_width = 9.244208
+rule_steep = 0.135220
+# grid_size = '800x800'
+
+[maze]
+self_couple = 0.957895
+field_couple = 0.111443
+field_type = 'coupled'
+rule_width = 5.349656
+rule_steep = 0.093903
+grid_size = '400x400'
+
+[curly]
+self_couple = 0.375720
+field_couple = 0.334898
+field_type = 'coupled'
+rule_width = 0.5
+rule_steep = 3.0
+
+[marble_lines]
+self_couple = 0.449417
+field_couple = 0.193807
+field_type = 'coupled'
+rule_width = 0.500000
+rule_steep = 3.000000
+
+[marble_rye]
+self_couple = 0.884101
+field_couple = 1.0
+field_type = 'null'
+rule_width = 1.0368
+rule_steep = 0.697704
+
+[quasi_stable]
+self_couple = 5.353909
+field_couple = 0.031301
+field_type = 'coupled'
+rule_width = 9.244208
+rule_steep = 0.135220
