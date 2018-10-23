@@ -208,13 +208,15 @@ __global__ void calcField(float4 *field, uchar4 *dst_old, int fx, int fy,
             nn.y = float(nval.y)/CHAR_MASK;
             nn.z = float(nval.z)/CHAR_MASK;
 
-            fval.x = max(0.0,nn.x-cn.x/8);
-            fval.y = max(0.0,nn.y-cn.y/8);
-            fval.z = max(0.0,nn.z-cn.z/8);
-
-            // fval.x = 1.0 - sigmoid(2.0-nn.x) - sigmoid(nn.x-3.0);
-            // fval.y = 1.0 - sigmoid(2.0-nn.x) - sigmoid(nn.x-3.0);
-            // fval.z = 1.0 - sigmoid(2.0-nn.x) - sigmoid(nn.x-3.0);
+            if (fieldType == 2) {
+                fval.x = max(0.0,nn.x-cn.x/8);
+                fval.y = max(0.0,nn.y-cn.y/8);
+                fval.z = max(0.0,nn.z-cn.z/8);
+            } else if (fieldType == 3) {
+                fval.x = max(0.0,nn.z-cn.z/8);
+                fval.y = max(0.0,nn.x-cn.x/8);
+                fval.z = max(0.0,nn.y-cn.y/8);
+            }
         }
 
         field[pixel].x = fval.z;
@@ -258,7 +260,7 @@ void Poseidon_kernel(uchar4 *dst, uchar4 *dst_old, float4 *field,
         }
     }
 
-    if (calc_field || (fieldType == 2)) {
+    if (calc_field || (fieldType == 2) || (fieldType == 3)) {
         calcField<<<numBlocks, threadsPerBlock>>>(field, dst_old, fx, fy, imageW, imageH, fieldType);
     }
 

@@ -39,7 +39,8 @@ config = dict(config, **config_args)
 field_map = {
     'null': 0,
     'radial': 1,
-    'coupled': 2
+    'coupled': 2,
+    'swizzled': 3
 }
 process_size = lambda size:  [s.strip() for s in size.lower().split('x')]
 config['field_type'] = field_map[config['field_type']]

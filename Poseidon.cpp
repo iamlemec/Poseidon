@@ -169,13 +169,13 @@ inline float gaussian(float x, float y, float cx, float cy, float sigma)
 {
     float gx = exp(-0.5*powf((x-cx)/sigma,2));
     float gy = exp(-0.5*powf((y-cy)/sigma,2));
-    return 0.2*gx*gy;
+    return gx*gy;
 }
 
 void genRandImage(int type, bool indep)
 {
     int ix, iy, pos;
-    float fx, fy;
+    float cx, cy;
     int r0;
     float v;
     unsigned char c;
@@ -184,11 +184,11 @@ void genRandImage(int type, bool indep)
     for (iy = 0; iy < imageH; iy++) {
         for (ix = 0; ix < imageW; ix++) {
             pos = iy*imageW + ix;
-            fx = float(ix)/imageW;
-            fy = float(iy)/imageH;
+            cx = float(ix)/imageW;
+            cy = float(iy)/imageH;
             switch (type) {
             case IMAGE_TYPE_CUTOFF:
-                if (distance2(fx,fy,0.5,0.5) < 0.1) {
+                if (distance2(cx,cy,0.5,0.5) < 0.1) {
                     r0 = rand();
                     r = INT_TO_UCHAR4(r0);
                     r.w = 0;
@@ -201,7 +201,7 @@ void genRandImage(int type, bool indep)
                 }            
                 break;
             case IMAGE_TYPE_GAUSSIAN:
-                v = rand()*gaussian(fx,fy,0.5,0.5,0.1);
+                v = rand()*gaussian(cx,cy,0.5,0.5,0.1);
                 r0 = (int)(CHAR_MASK*v);
                 c = INT_TO_UCHAR(r0);
                 r = {c, c, c, 0};
@@ -273,7 +273,7 @@ void keyboardFunc(unsigned char k, int, int)
         steep /= 1.2;
         break;
     case 't':
-        fieldType = (fieldType + 1) % 3;
+        fieldType = (fieldType + 1) % 4;
         calc_field = true;
         break;
     case 'y':
@@ -471,7 +471,7 @@ void reshapeFunc(int w, int h)
     regen = true;
     calc_field = true;
 
-    genRandImage(IMAGE_TYPE_GAUSSIAN, true);
+    genRandImage(IMAGE_TYPE_CUTOFF, true);
 }
 
 void initGL(int argc, char **argv)
