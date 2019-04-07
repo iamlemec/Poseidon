@@ -62,3 +62,24 @@ field_couple = 0.482253
 field_type = 'swizzled'
 rule_width = 0.500000
 rule_steep = 0.837245
+
+[mottled_curly]
+self_couple = 1.010000
+field_couple = 0.161506
+field_type = 'swizzled'
+rule_width = 0.500000
+rule_steep = 0.389433
+
+[living_color]
+self_couple = 0.957895
+field_couple = 0.111443
+field_type = 'swizzled'
+rule_width = 5.349656
+rule_steep = 0.233661
+
+[black_hole]
+self_couple = 1.000000
+field_couple = 15.407022
+field_type = 'radial'
+rule_width = 0.500000
+rule_steep = 5.000000
