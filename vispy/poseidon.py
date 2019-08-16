@@ -83,6 +83,21 @@ void main(void)
             - sigmoid(rule_steep*(n-(3.0+rule_width)))
         );
 
+    /*
+    float v = c;
+    if( c > 0.5 ) {
+        if (n  < 1.5) {
+            v = 0.0;
+        } else if (n > 3.5) {
+            v = 0.0;
+        }
+    } else {
+        if ((n > 2.5) && (n < 3.5)) {
+            v = 1.0;
+        }
+    }
+    */
+
     float u = ( v + couple_field * f ) * couple_cells;
 
     gl_FragColor = vec4(u, 0, 0, 0);
