@@ -1,6 +1,6 @@
 import os
 import argparse
-import pytoml as toml
+import toml
 
 parser = argparse.ArgumentParser(description='General celular automata simulator in CUDA.')
 parser.add_argument('--config', type=str, default=None, help='Config file from which to load rules')
@@ -21,7 +21,7 @@ config = {
     'field_type': 'null',
     'rule_width': 0.5,
     'rule_steep': 3.0,
-    'grid_size': '400x400',
+    'grid_size': '2000x2000',
     'speed': 1.0
 }
 
